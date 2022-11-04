@@ -18,8 +18,8 @@ let server = http.createServer(app);
 let io = socketIO(server);
 let users = new Users();
 let userIP = null;
-let userName = '';
-let roomName = '';
+let userName = null;
+let roomName = null;
 
 app.use(express.static(publicPath));
 
