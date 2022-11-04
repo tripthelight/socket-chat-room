@@ -27,14 +27,16 @@ io.on('connection', (socket) => {
   console.log("A new user just connected");
   // index.html user join
   socket.on('userJoin', data => {
+    
     if (userIP) {
       roomName = randomName(20);
       io.emit('indexUserJoin', {gameName: data.gameName, roomName: roomName, userName: userName});
     } else {
       roomName = randomName(20);
-      userIP = String(data.ip);
+      userIP = String(data.userIP);
       let firstName = randomName(20);
       userName = firstName;
+      const jsobnData = loadJSON('./server/databases/taptap.json');
       io.emit('indexUserJoin', {gameName: data.gameName, roomName: roomName, userName: firstName});
     }
   });

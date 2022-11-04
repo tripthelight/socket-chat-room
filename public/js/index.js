@@ -12,27 +12,32 @@ const GAME_NAME = [
 /**
  * IP CHECK
  */
-$.get('https://www.cloudflare.com/cdn-cgi/trace', function(data) {
-  data = data.trim().split('\n').reduce(function(obj, pair) {
-    pair = pair.split('=');
-    return obj[pair[0]] = pair[1], obj;
-  }, {});
-  // console.log(data.ip);
-  ip = String(data.ip);
-});
-
+function getIP(callback) {
+  // new Promise() 추가
+  return new Promise(function(resolve, reject) {
+    $.get('https://www.cloudflare.com/cdn-cgi/trace', function(data) {
+      data = data.trim().split('\n').reduce(function(obj, pair) {
+        pair = pair.split('=');
+        return obj[pair[0]] = pair[1], obj;
+      }, {});
+      // console.log(data.ip);
+      resolve(data.ip);
+    });
+  });
+}
 /**
  * SOCKET
  */
 socket.on('connect', function() {
-  // index: request room name
-  const ROOM_NAME_EL = document.querySelectorAll('.roomName');
-  for (let i = 0; i < ROOM_NAME_EL.length; i++) {
-    socket.emit('userJoin', {
-      gameName: ROOM_NAME_EL[i].dataset.name,
-      userIP: ip
-    });
-  }
+  getIP().then(function(ip) {
+    const ROOM_NAME_EL = document.querySelectorAll('.roomName');
+    for (let i = 0; i < ROOM_NAME_EL.length; i++) {
+      socket.emit('userJoin', {
+        gameName: ROOM_NAME_EL[i].dataset.name,
+        userIP: ip
+      });
+    }
+  });
   
   // index: response room name
   socket.on('indexUserJoin', function(data) {
@@ -44,6 +49,7 @@ socket.on('connect', function() {
     }
   });
 });
+
 function returnRoomName(_name, _data) {
   let roomEl = document.querySelector('input[data-name=' + _name + ']');
   roomEl.value = '';
