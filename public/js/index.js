@@ -25,6 +25,7 @@ function getIP(callback) {
     });
   });
 }
+
 /**
  * SOCKET
  */
@@ -38,7 +39,7 @@ socket.on('connect', function() {
       });
     }
   });
-  
+
   // index: response room name
   socket.on('indexUserJoin', function(data) {
     // ADD ROOM NAME
@@ -49,7 +50,6 @@ socket.on('connect', function() {
     }
   });
 });
-
 function returnRoomName(_name, _data) {
   let roomEl = document.querySelector('input[data-name=' + _name + ']');
   roomEl.value = '';
