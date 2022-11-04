@@ -19,26 +19,24 @@ let io = socketIO(server);
 let users = new Users();
 let userIP = null;
 let userName = '';
-// let roomName = '';
+let roomName = '';
 
 app.use(express.static(publicPath));
 
 io.on('connection', (socket) => {
   console.log("A new user just connected");
-  // roomName = randomName(20);
   // index.html user join
   socket.on('userJoin', data => {
-    // if (userIP) {
-    //   io.emit('indexUserJoin', {gameName: data.gameName, roomName: roomName, userName: userName});
-    // } else {
-    //   userIP = String(data.ip);
-    //   let firstName = randomName(20);
-    //   userName = firstName;
-    //   io.emit('indexUserJoin', {gameName: data.gameName, roomName: roomName, userName: firstName});
-    // }
-    let roomName = randomName(20);
-    let firstName = randomName(20);
-    io.emit('indexUserJoin', {gameName: data.gameName, roomName: roomName, userName: firstName});
+    if (userIP) {
+      roomName = randomName(20);
+      io.emit('indexUserJoin', {gameName: data.gameName, roomName: roomName, userName: userName});
+    } else {
+      roomName = randomName(20);
+      userIP = String(data.ip);
+      let firstName = randomName(20);
+      userName = firstName;
+      io.emit('indexUserJoin', {gameName: data.gameName, roomName: roomName, userName: firstName});
+    }
   });
 
   // add game room
