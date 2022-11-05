@@ -9,6 +9,9 @@ const GAME_NAME = [
   'blackandwhite1'
 ];
 
+// window.localStorage.clear();
+// window.sessionStorage.clear();
+
 /**
  * IP CHECK
  */
@@ -37,25 +40,47 @@ socket.on('connect', function() {
         gameName: ROOM_NAME_EL[i].dataset.name,
         userIP: ip
       });
+      if (window.localStorage.getItem(ROOM_NAME_EL[i].dataset.name)) {
+        ROOM_NAME_EL[i].value = window.localStorage.getItem(ROOM_NAME_EL[i].dataset.name);
+      } else {
+        socket.emit('userJoinGameName', {
+          gameName: ROOM_NAME_EL[i].dataset.name,
+          userIP: ip
+        });
+      }
     }
   });
 
-  // index: response room name
-  socket.on('indexUserJoin', function(data) {
-    // ADD ROOM NAME
+  // index: response user name
+  socket.on('indexUserName', function(data) {
+    // ADD USER NAME
     for (let i = 0; i < GAME_NAME.length; i++) {
       if (data.gameName == GAME_NAME[i]) {
         returnRoomName(GAME_NAME[i], data);
       }
     }
   });
+
+  // index: response user name
+  socket.on('indexGameName', function(data) {
+    // ADD GAME NAME
+    for (let i = 0; i < GAME_NAME.length; i++) {
+      if (data.gameName == GAME_NAME[i]) {
+        returnGameName(GAME_NAME[i], data);
+      }
+    }
+  });
 });
 function returnRoomName(_name, _data) {
   let roomEl = document.querySelector('input[data-name=' + _name + ']');
-  roomEl.value = '';
-  roomEl.value = _data.roomName;
   let userEl = roomEl.parentElement.parentElement.querySelector('input[name="name"]');
   userEl.value = _data.userName;
+}
+function returnGameName(_name, _data) {
+  let roomEl = document.querySelector('input[data-name=' + _name + ']');
+  roomEl.value = '';
+  roomEl.value = _data.roomName;
+  window.localStorage.setItem(_name, _data.roomName);
 }
 
 /**
@@ -73,4 +98,18 @@ function comnInit() {
   
   // ADD GAME NAME
   // for (let i = 0; i < NAME_EL.length; i++) NAME_EL[i].value = gameName;
+}
+
+if (performance.navigation.type == performance.navigation.TYPE_RELOAD) {
+  // console.info( "This page is reloaded" );
+  setTimeout(function() {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  }, 1);
+} else {
+  // window close
+  setTimeout(function() {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  }, 1);
 }
