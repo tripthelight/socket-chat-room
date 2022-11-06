@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>ROOMS TEST</title>
+    <meta name="viewport" content="width=device-width, inital-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body >
+    <h1>ROOMS TEST</h1>
+
+    <select id="roomoptions" onchange="joinRoom()">
+      <option value="채팅방 1" selected>채팅방 1</option>
+      <option value="채팅방 2">채팅방 2</option>
+    </select>
+
+    <ul id="messages" type="none">
+      <li id="usercount"></li>
+    </ul>
+
+    <form id="msgform">
+      <input id="msginput" autocomplete="off" type="text">
+      <button type="submit">전송</button>
+    </form>
+
+    <button onclick="getRooms()">방 목록 가져오기</button>
+
+    <p id="rooms"></p>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      let roomname = "채팅방 1"
+      let socket = io();
+      let msgform = document.getElementById('msgform');
+      let roomsText = document.getElementById('rooms');
+
+      // socket.on 함수로 서버에서 전달하는 신호를 수신
+      socket.on('usercount', function (count) {
+        let userCounter = document.getElementById('usercount');
+        userCounter.innerText = "현재 " + count + "명이 서버에 접속해있습니다.";
+      });
+
+      // 메시지 수신시 HTML에 메시지 내용 작성
+      socket.on('message', function(msg) {
+        console.log(msg);
+        let messageList = document.getElementById('messages');
+        let messageTag = document.createElement("li");
+        messageTag.innerText = msg;
+        messageList.appendChild(messageTag);
+      });
+
+      // 접속한 룸이 바뀌었을 때
+      socket.on('roomChanged', function(joinedRoom) { 
+        roomname = joinedRoom;
+        let messageList = document.getElementById('messages');
+        let messageTag = document.createElement("li");
+        messageTag.innerText = joinedRoom + "에 접속했습니다.";
+        messageList.appendChild(messageTag);
+      });
+
+      msgform.onsubmit = function(e) {
+        e.preventDefault();
+        let msginput = document.getElementById('msginput');
+
+        // socket.emit으로 서버에 신호를 전달
+        socket.emit('message', msginput.value, roomname);
+
+        msginput.value = "";
+      };
+
+      function getRooms() { // 방 목록 가져오기 버튼 클릭시
+        // url을 지정해서 특정 네임스페이스를 들어갈 수 있다.
+        let taptap = io.connect('http://localhost:3000/taptap');
+
+        taptap.emit('getRooms');  // getRooms 이벤트 호출
+
+        taptap.on('rooms', function(rooms) { // rooms 이벤트 발생
+          // 룸 목록 업데이트
+          roomsText.textContent = "";
+          for (let room in rooms) {
+            roomsText.innerHTML += room + "<br>";
+          }
+        });
+      }
+
+      function joinRoom() { // 방 접속 버튼 클릭시
+        let roomOptions = document.getElementById("roomoptions");
+        let roomToJoin = roomOptions.options[roomOptions.selectedIndex].value;
+
+        // 서버에 룸 전환 신호를 발신
+        socket.emit('joinRoom', roomname, roomToJoin);
+      }
+    </script>
+  </body>
+</html>

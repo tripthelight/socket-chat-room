@@ -2,41 +2,64 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <title>TAP! TAP!</title>
     <meta name="viewport" content="width=device-width, inital-scale=1, user-scalable=no">
     <link rel="stylesheet" href="/css/styles.css">
   </head>
-  <body class="chat">
-
-    <div class="chat__sidebar">
-      <h3>People</h3>
-      <div id="users"></div>
-    </div>
-
-    <div class="chat__main">
-      <ol id="messages" class="chat__messages"></ol>
-
-      <div class="chat__footer">
-        <form id="message-form">
-          <input name="message" type="text" placeholder="Message" autofocus autocomplete="off"/>
-          <button id="submit-btn">Send</button>
-        </form>
-      </div>
-    </div>
-
-    <script id="message-template" type="text/template">
-      <li class="message">
-        <div class="message__title">
-          <h4>{{from}}</h4>
-        </div>
-        <div class="message__body">
-          <p>{{text}}</p>
-        </div>
-      </li>
-    </script>
+  <body >
+    <h1>TAP! TAP!</h1>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script type="text/javascript" src="/js/chat.js"></script>
-    <script type="text/javascript" src="/js/libs/mustache.js"></script>
+    <script>
+      let socket = io();
+      let roomName = '';
+      let gameURL = window.location.protocol + "//" + window.location.host;
+      let namespace = io(gameURL + '/taptap');
+
+      namespace.on('connect', function() {
+        console.log('connect success');
+      });
+      namespace.on('create', function(data) {
+        // console.log('join', data);
+        console.log('현재 ' + data.room + '에 접속');
+        console.log('현재 ' + data.count + '명');
+      });
+      namespace.on('newUserjoin', function(data) {
+        // console.log('join', data);
+        console.log('누가 ' + data.room + '에 접속');
+        console.log('현재 ' + data.count + '명');
+      });
+      namespace.on('leave', function(data) {
+        console.log('나간뒤 ' + data + '명');
+      });
+      namespace.on('youWin', function(data) {
+        alert('당신이 이겼따');
+        location.href = '/';
+      });
+      namespace.on('youDie', function(data) {
+        alert('당신이 졌다');
+        location.href = '/';
+      });
+
+      /**
+       * BROWSER REFRESH CHECK
+      */
+      // if (window.performance) {
+      //   // this is reload  
+      //   alert('이 방을 나감')
+      //   location.href = '/';
+      //   console.info("window.performance works fine on this browser");
+      // }
+      // console.info(performance.navigation.type);
+      // if (performance.navigation.type == performance.navigation.TYPE_RELOAD) {
+      //   // console.info( "This page is reloaded" );
+      //   console.log(1);
+      //   location.href = '/';
+      //   console.log(2);
+      // } else {
+      //   // window close
+      //   // location.href = '/';
+      // }
+    </script>
   </body>
 </html>
