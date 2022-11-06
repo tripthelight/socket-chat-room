@@ -22,6 +22,7 @@ let io = socketIO(server);
 let users = new Users();
 let roomId = null;
 
+
 const taptap = io.of('/taptap');
 const blackandwhite1 = io.of('/blackandwhite1');
 
@@ -34,24 +35,35 @@ app.get('/blackandwhite1', (req, res) => {res.sendFile(publicPath + '/blackandwh
 // namespace: taptap
 taptap.on('connection', (socket) => {
   console.log('taptap 네임스페이스에 접속');
-  
+
   let state = false;
   const jsonData = loadJSON('./server/databases/taptap.json');
   if (jsonData.length == 0) {
     roomId = randomName(20);
-    jsonData.push({"name":roomId, "person":"1"});
+    jsonData.push({"name":roomId, "person":"1", "state":"true"});
   } else {
     for (let i = 0; i < jsonData.length; i++) {
-      if (jsonData[i].person == '1') {
-        roomId = jsonData[i].name;
-        jsonData[i].person = '2';
-        state = true;
-        break;
+      if (jsonData[i].person == '2' && jsonData[i].state == 'false') {
+        console.log('111');
+        jsonData.splice(i, 1);
+        saveJSON('./server/databases/taptap.json', jsonData);
+        socket.emit('youDie', 'die');
+        socket.leave(roomId);
+        socket.disconnect();
+        return;
+      } else {
+        if (jsonData[i].person == '1') {
+          roomId = jsonData[i].name;
+          jsonData[i].person = '2';
+          state = true;
+          // console.log(taptap.adapter.rooms[roomId].length);
+          break;
+        }
       }
     }
     if (!state) {
       roomId = randomName(20);
-      jsonData.push({"name":roomId, "person":"1"});
+      jsonData.push({"name":roomId, "person":"1", "state":"true"});
     }
   }
   saveJSON('./server/databases/taptap.json', jsonData);
@@ -64,6 +76,42 @@ taptap.on('connection', (socket) => {
     room: roomId,
     count: taptap.adapter.rooms[roomId].length
   });
+
+  socket.on('disconnect', () => {
+    console.log('taptap 네임스페이스 접속 해제');
+    // socket.to(roomId).emit('usercount', io.engine.clientsCount);
+    // socket.to(roomId).emit('leave', taptap.adapter.rooms[roomId].length);
+
+    // socket.leave(roomId);
+    // const currentRoom = socket.adapter.rooms[roomId];
+    // const userCount = currentRoom ? currentRoom.length : 0;
+
+    // socket.leave(roomId);
+    // socket.disconnect();
+
+    const jsonData = loadJSON('./server/databases/taptap.json');
+    for (let i = 0; i < jsonData.length; i++) {
+      // if (jsonData[i].name == roomId) {
+      //   jsonData.splice(i, 1);
+      // }
+      if (jsonData[i].name == roomId) {
+        jsonData[i].state = 'false';
+      }
+    }
+    saveJSON('./server/databases/taptap.json', jsonData);
+
+    // socket.broadcast.to(roomId).emit('youWin', 'win');
+    socket.to(roomId).emit('youWin', 'win');
+  });
+
+  
+  // else {
+  //   socket.emit('youDie', 'die');
+  //   socket.leave(roomId);
+  //   socket.disconnect();
+  // }
+
+  
 
 
 
@@ -129,44 +177,8 @@ taptap.on('connection', (socket) => {
   // console.log(`${roomId} 방에 접속함`);
   // console.log(taptap.adapter.rooms[roomId].length);
 
-  socket.on('disconnect', () => {
-    console.log('taptap 네임스페이스 접속 해제');
-    // socket.to(roomId).emit('usercount', io.engine.clientsCount);
-    // socket.to(roomId).emit('leave', taptap.adapter.rooms[roomId].length);
-
-    // socket.leave(roomId);
-    // const currentRoom = socket.adapter.rooms[roomId];
-    // const userCount = currentRoom ? currentRoom.length : 0;
-
-    socket.leave(roomId);
-
-    const jsonData = loadJSON('./server/databases/taptap.json');
-    for (let i = 0; i < jsonData.length; i++) {
-      if (jsonData[i].name == roomId) {
-        if (jsonData[i].person == '2') {
-          jsonData[i].person = '1';
-          // socket.to(roomId).emit('youWin', 'win');
-          break;
-        } else if (jsonData[i].person == '1') {
-          jsonData.splice(i, 1);
-          // socket.to(roomId).emit('youDie', 'die');
-          break;
-        }
-      }
-    }
-    saveJSON('./server/databases/taptap.json', jsonData);
-
-    // socket.broadcast.to(roomId).emit('youWin', 'win');
-  });
+  
 });
-
-
-
-
-
-
-
-
 
 // io.on('connection', (socket) => {
 //   console.log("A new user just connected");
